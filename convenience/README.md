@@ -94,6 +94,19 @@ nmcli --ask con up NETWORK_SSID
 
 # Display available Wi-Fi access points
 nmcli --pretty device wifi list
+
+nmcli dev wifi connect <name> password <password>
+
+sudo traceroute -T -p 443 8.8.8.8  # replace IP
+
+netstat -nt
+
+sudo netstat -tunlp
+
+route -n
+
+# show or manipulate wireless devices and their configuration
+iw dev wlo1 link
 ```
 
 
