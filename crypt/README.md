@@ -7,6 +7,9 @@
 
 ```bash
 gpg --verbose --output vault.tar.bz2.gpg --symmetric --no-symkey-cache vault.tar.bz2
+
+
+# gpg --verbose --log-time --log-file test.gpg.log --output test.tar.bz2.gpg --symmetric --no-symkey-cache test.tar.bz2
 ```
 
 
@@ -15,6 +18,9 @@ gpg --verbose --output vault.tar.bz2.gpg --symmetric --no-symkey-cache vault.tar
 
 ```bash
 gpg --verbose --output decrypt-output_vault.tar.bz2  --decrypt --no-symkey-cache vault.tar.bz2.gpg
+
+
+# gpg --verbose --log-time --log-file decrypt-out.log --output decrypt-out_test.tar.bz2  --decrypt --no-symkey-cache test.tar.bz2.gpg
 ```
 
 

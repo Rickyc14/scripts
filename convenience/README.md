@@ -17,6 +17,36 @@ tar --create \
     --file="archive_output_file_name.tar.gz" \
     --directory="$(dirname "${FULL_PATH}")" \
     "$(basename "${FULL_PATH}")"
+
+#    Compression options
+#        -a, --auto-compress
+#               Use archive suffix to determine the compression program.
+#
+#        -I, --use-compress-program=COMMAND
+#               Filter data through COMMAND.  It must accept the -d option, for decompression.  The argument can contain command line options.
+#
+#        -j, --bzip2
+#               Filter the archive through bzip2(1).
+#
+#        -J, --xz
+#               Filter the archive through xz(1).
+#
+#        --lzip Filter the archive through lzip(1).
+#
+#        --lzma Filter the archive through lzma(1).
+#
+#        --lzop Filter the archive through lzop(1).
+#
+#        --no-auto-compress
+#               Do not use archive suffix to determine the compression program.
+#
+#        -z, --gzip, --gunzip, --ungzip
+#               Filter the archive through gzip(1).
+#
+#        -Z, --compress, --uncompress
+#               Filter the archive through compress(1).
+#
+#        --zstd Filter the archive through zstd(1).
 ```
 
 
