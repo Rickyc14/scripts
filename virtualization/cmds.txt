@@ -1,0 +1,7 @@
+
+virt-filesystems --add opensusetumbleweed.qcow2 --all --long --human-readable
+
+guestmount --add opensusetumbleweed.qcow2 --mount '/dev/sda2:/:subvol=@/home' --ro _mountpoint/
+
+guestunmount _mountpoint
+

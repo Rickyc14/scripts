@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+set -o nounset -o errexit
+
+readonly DEFAULT_TOOLBOX_DESTINATION_DIRECTORY="/opt/jetbrains-toolbox"
+readonly DEFAULT_BIN_DIRECTORY="/usr/local/bin"
+
+TOOLBOX_PATH="${1:?"Toolbox path argument is missing."}"
+TOOLBOX_SHA256_CHECKSUM_PATH="${2:?"Toolbox checksum argument is missing."}"
+TOOLBOX_DESTINATION_DIRECTORY="${3:-${DEFAULT_TOOLBOX_DESTINATION_DIRECTORY}}"
+BIN_DIRECTORY="${4:-${DEFAULT_BIN_DIRECTORY}}"
+
+if [[ ${EUID} -ne 0 ]]; then
+    echo "Root privileges required!" 1>&2
+    exit 1
+fi
+
+if [[ ! -f "${TOOLBOX_PATH}" ]]; then
+    echo "Toolbox archive not found: '${TOOLBOX_PATH}'." 1>&2
+    exit 1
+elif [[ ! -f "${TOOLBOX_SHA256_CHECKSUM_PATH}" ]]; then
+    echo "Toolbox archive checksum not found: '${TOOLBOX_SHA256_CHECKSUM_PATH}'" 1>&2
+    exit 1
+elif [[ ! -d "${TOOLBOX_DESTINATION_DIRECTORY}" ]]; then
+    echo "Creating destination directory: '${TOOLBOX_DESTINATION_DIRECTORY}'..."
+    if ! mkdir "${TOOLBOX_DESTINATION_DIRECTORY}"; then
+        echo "Could not create destination directory." 1>&2
+        exit 1
+    fi
+elif [[ ! -d "${BIN_DIRECTORY}" ]]; then
+    echo "Bin directory not found: '${BIN_DIRECTORY}'." 1>&2
+    exit 1
+fi
+
+readonly TOOLBOX_PATH \
+         TOOLBOX_SHA256_CHECKSUM_PATH \
+         TOOLBOX_DESTINATION_DIRECTORY \
+         BIN_DIRECTORY
+
+cd "$(dirname "$(realpath "${TOOLBOX_PATH}")")"
+
+echo "Verifying SHA256 checksum..."
+
+if ! sha256sum --check --quiet --status "${TOOLBOX_SHA256_CHECKSUM_PATH}"; then
+    cd "${OLDPWD}"
+    echo "SHA256 checksum is not valid!" 1>&2
+    exit 1
+fi
+
+cd "${OLDPWD}"
+
+echo "Extracting Toolbox to '${TOOLBOX_DESTINATION_DIRECTORY}' ..."
+tar -xzf "${TOOLBOX_PATH}" -C "${TOOLBOX_DESTINATION_DIRECTORY}" --strip-components=1
+
+echo "Setting permissions and configuring symbolic links..."
+chmod -R +rwx "${TOOLBOX_DESTINATION_DIRECTORY}"
+ln -s "${TOOLBOX_DESTINATION_DIRECTORY}/jetbrains-toolbox" "${BIN_DIRECTORY}/jetbrains-toolbox"
+chmod -R +rwx "${BIN_DIRECTORY}/jetbrains-toolbox"
+
+
+cat <<END
+Execute the jetbrains-toolbox binary to run the Toolbox App.
+
+After you run the Toolbox App for the first time, it will automatically add the Toolbox App icon Toolbox App icon to the main menu.
+
+Done!
+END
+
+exit 0
+

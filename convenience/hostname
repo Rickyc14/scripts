@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+
+hostnamectl
+
+cat /etc/hostname
+cat /etc/hosts
+
+echo -e "\n\nSetting hostname..."
+
+sudo hostnamectl set-hostname --static localhost
+
+echo -e "\nDone!"
+
+

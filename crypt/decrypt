@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+
+# --decrypt
+# Decrypt the file given on the command line (or STDIN if no file is specified) and write
+# it to STDOUT (or the file specified with --output). If the decrypted file is signed, the
+# signature is also verified. This command differs from the default operation, as it never
+# writes to the filename which is included in the file and it rejects files that don’t
+# begin with an encrypted message.
+
+
+gpg --verbose --output decrypt-output_vault.tar.bz2  --decrypt --no-symkey-cache vault.tar.bz2.gpg
+

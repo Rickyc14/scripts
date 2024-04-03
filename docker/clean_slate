@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+
+CONTAINER_IDS="$(docker ps -a -q)"
+
+docker images --format "table {{.ID}}\t{{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+
+docker stop "${CONTAINER_IDS}" > /dev/null 2>&1
+
+docker rm --force "${CONTAINER_IDS}" > /dev/null 2>&1
+
+docker system prune --all --force > /dev/null 2>&1
+
+while read -r volume_name; do
+    docker volume rm --force "${volume_name}" > /dev/null 2>&1
+done < <(docker volume ls --format "{{.Name}}")
+
+echo "Done!"
+
+exit 0
+

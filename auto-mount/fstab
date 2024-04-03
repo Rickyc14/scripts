@@ -1,0 +1,13 @@
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /                       btrfs  defaults                      0  0
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /var                    btrfs  subvol=/@/var                 0  0
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /usr/local              btrfs  subvol=/@/usr/local           0  0
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /srv                    btrfs  subvol=/@/srv                 0  0
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /root                   btrfs  subvol=/@/root                0  0
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /opt                    btrfs  subvol=/@/opt                 0  0
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /home                   btrfs  subvol=/@/home                0  0
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /boot/grub2/x86_64-efi  btrfs  subvol=/@/boot/grub2/x86_64-efi  0  0
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /boot/grub2/i386-pc     btrfs  subvol=/@/boot/grub2/i386-pc  0  0
+UUID=61F8-3212                             /boot/efi               vfat   utf8                          0  2
+UUID=7279f632-7df5-4ffb-918c-8c2e803351e5  swap                    swap   defaults                      0  0
+UUID=c5a13e07-1cec-4e46-864b-9210e1d0a6c1  /.snapshots             btrfs  subvol=/@/.snapshots          0  0
+UUID=40c22e44-fe9e-45ed-a4ae-7a6125948727  /drive/mountpoint       ext4   defaults                      0  2

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+
+KSCREEN_DIR="${HOME}/.local/share/kscreen"
+
+
+if [ ! -d "${KSCREEN_DIR}" ]
+then
+  echo "${KSCREEN_DIR} does not exist!"
+  exit 1
+fi
+
+echo "Creating backup of '${KSCREEN_DIR}' directory..."
+
+tar --create \
+    --verbose \
+    --gunzip \
+    --force-local \
+    --file="KScreen__$(date +"%Y-%m-%d_%H-%M-%S").tar.gz" \
+    --directory="$(dirname "${KSCREEN_DIR}")" \
+    "$(basename "${KSCREEN_DIR}")"
+
+echo "Backup created!"
+
+if [ "$(find "${KSCREEN_DIR}" -mindepth 1 -type d | wc -l)" -eq 1 ] && \
+    [ "$(basename "$(find "${KSCREEN_DIR}" -mindepth 1 -type d)")" == "outputs" ]
+then
+    find "${KSCREEN_DIR}" -mindepth 1 -delete
+fi
+
+echo "Done!"
+

@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+set -o nounset -o errexit -o noclobber -o pipefail
+
+
+function create_archive()
+{
+    # NOTE: input and output must not be in the same directory!
+    # https://help.ubuntu.com/community/BackupYourSystem/TAR
+    [ ! -d "${1}" ] && [ ! -f "${1}" ] && return ${INVALID_PATH}
+    tar --create --verbose --gunzip --force-local --directory="${HOME}" --file="${1}.tar.gz" "${1}"
+}
+
+
+function create_archive_but_exclude_jetbrains_dir()
+{
+    # NOTE:
+    # 1. The --directory=DIR option, which changes to DIR before performing any operations,
+    #    is order-sensitive, meaning it will affect all the options that follow;
+    # 2. Trailing slashes at the end of excluded folders will cause tar to not exclude
+    #    those folders at all;
+    # 3. --exclude='./folder' MUST be at the beginning of the tar command
+    tar --directory="${HOME}" \
+        --exclude='.local/share/JetBrains' \
+        --create --verbose --gunzip --force-local \
+        --file='dot.local-2022-12-26.tar.gz' \
+        '.local'
+}
+
+function restore_archive()
+{
+    [ ! -f "${1}" ] && return ${INVALID_PATH}
+    tar --extract --verbose --gunzip --preserve-permissions --file="${source}"
+}
+
+
+function back_up_dot_directories()
+{
+    create_archive "${HOME}/.config/" || return ${CONFIG_DIRECTORY_NOT_FOUND}
+    create_archive "${HOME}/.local/" || return ${LOCAL_DIRECTORY_NOT_FOUND}
+    create_archive "${HOME}/.mozilla/" || return ${MOZILLA_FIREFOX_DIRECTORY_NOT_FOUND}
+}
+
+
+
+
+
+# Create archive
+tar --create --verbose --gunzip --force-local --directory="${HOME}" --file="${1}.tar.gz" "${1}"
+
+tar --create --verbose --gunzip --force-local --file="${1}.tar.gz" --directory="${HOME}" "${dir}"
+
+tar --create \
+    --verbose \
+    --gunzip \
+    --force-local \
+    --file="archive_output_file_name.tar.gz" \
+    --directory="$(dirname "${FULL_PATH}")" \
+    "$(basename "${FULL_PATH}")"
+
+
+# The following is an exemplary command of how to archive your system
+tar -cvpzf backup.tar.gz --exclude=/backup.tar.gz --one-file-system /

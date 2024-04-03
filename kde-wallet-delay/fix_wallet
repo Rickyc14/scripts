@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+
+echo no-allow-external-cache:0:1 | gpgconf --change-options gpg-agent
+

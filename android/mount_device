@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+
+MOUNT_POINT_PATH="/mount/point/path"
+
+
+if ! command -v simple-mtpfs &> /dev/null
+then
+    echo "'simple-mtpfs' package not installed!"
+    exit 1
+fi
+
+if ! command -v mtp-detect &> /dev/null
+then
+    echo "'mtp-tools' package not installed!"
+    exit 1
+fi
+
+
+
+mtp-detect
+
+
+echo -e "\n\nMake sure device is unlocked..."
+
+
+simple-mtpfs "${MOUNT_POINT_PATH}" -o allow_other
+
+
+echo "Done!"
+

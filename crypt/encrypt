@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+
+# --symmetric
+# Encrypt with a symmetric cipher using a passphrase. The default symmetric
+# cipher used is AES‐128, but may be chosen with the ‐‐cipher‐algo option.
+# This command may be combined with ‐‐sign (for a signed and symmetrically
+# encrypted message), ‐‐encrypt (for a message that may be decrypted via a
+# secret key or a passphrase), or ‐‐sign and ‐‐encrypt together (for a
+# signed message that may be decrypted via a secret key or a passphrase).
+
+# gpg2 caches the passphrase used for symmetric encryption so that a decrypt
+# operation may not require that the user needs to enter the passphrase. The
+# option ‐‐no‐symkey‐cache can be used to disable this feature.
+
+# ‐‐no‐symkey‐cache
+# Disable the passphrase cache used for symmetrical en‐ and decryption. This
+# cache is based on the message specific salt value (cf. ‐‐s2k‐mode).
+
+
+gpg --verbose --output vault.tar.bz2.gpg --symmetric --no-symkey-cache vault.tar.bz2
+

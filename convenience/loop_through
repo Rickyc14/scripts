@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -o errexit -o noclobber -o nounset -o pipefail
+
+
+search_path="/usr/"
+
+
+while read file_path
+do
+    if [[ "$(file "${file_path}")" = "${file_path}: Bourne-Again shell script, ASCII text executable" ]]
+    then
+        printf "${file_path}\n"
+    fi
+done < <(find "${search_path}" -type f -executable)

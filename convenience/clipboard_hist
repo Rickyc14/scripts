@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+
+qdbus-qt5 org.kde.klipper /klipper org.kde.klipper.klipper.getClipboardHistoryMenu
+
+

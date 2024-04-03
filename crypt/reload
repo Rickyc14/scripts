@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+
+
+# ~/.gnupg/gpg-agent.conf
+#
+# default-cache-ttl 0
+# max-cache-ttl 0
+
+
+# gpg-agent
+#
+# ‐‐default‐cache‐ttl n
+# Set the time a cache entry is valid to n seconds.  The default is 600 seconds.  Each time a cache entry is accessed, the entry’s timer is reset.  To set an entry’s maximum lifetime, use max‐
+# cache‐ttl.   Note that a cached passphrase may not be evicted immediately from memory if no client requests a cache operation.  This is due to an internal housekeeping function which is only
+# run every few seconds.
+#
+# ‐‐max‐cache‐ttl n
+# Set the maximum time a cache entry is valid to n seconds.  After this time a cache entry will be expired even if it has been accessed recently or has been  set  using  gpg‐preset‐passphrase.
+# The default is 2 hours (7200 seconds).
+
+
+
+gpgconf --reload gpg-agent
+
+
+# or
+#
+# gpgconf --reload
+#
+# or
+#
+# gpgconf --kill gpg-agent
+#
+# or
+#
+# gpg-connect-agent reloadagent /bye
+#
+# or
+#
+# echo RELOADAGENT | gpg-connect-agent
+

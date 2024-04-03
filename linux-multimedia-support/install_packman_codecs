@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+
+sudo zypper refresh
+
+
+# Add packman repository
+sudo zypper addrepo \
+    --check \
+    --refresh \
+    --priority 90 \
+    'https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials' packman-essentials
+
+
+# Switch system packages to those in packman
+# as a mix of both can cause a variety of issues.
+sudo zypper dist-upgrade --from packman-essentials --allow-vendor-change
+
+
+# Install required packages
+sudo zypper install \
+    libavcodec56 \
+    libavcodec57 \
+    libavcodec58 \
+    libavformat56 \
+    libavformat57 \
+    libavformat58 \
+    libavdevice56 \
+    libavdevice57 \
+    libavdevice58
+
+
+# Update system
+sudo zypper up --allow-vendor-change
+
+
+echo "Done!"
+

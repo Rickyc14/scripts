@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# Install Toolbox App 2.0.2 on openSUSE Tumbleweed.
+#
+#
+# System requirements:
+#
+# Linux: 64-bit x86, glibc 2.17 (Ubuntu 18.04 or newer).
+# Toolbox App is packaged in AppImage and requires FUSE to run.
+#
+# See AppImage Wiki for details.
+# https://github.com/AppImage/AppImageKit/wiki
+#
+# The following packages must be present:
+# libfuse2 libxi6 libxrender1 libxtst6 mesa-utils libfontconfig libgtk-3-bin tar
+#
+# https://www.jetbrains.com/toolbox-app/
+# https://github.com/nagygergo/jetbrains-toolbox-install
+# https://askubuntu.com/questions/1410885/how-to-install-jetbrains-toolbox-in-ubuntu-22-04-lts
+
+
+sudo zypper install libfuse2 \
+                    libXi6 \
+                    libXrender1 \
+                    libXtst6 \
+                    Mesa \
+                    libfontconfig1 \
+                    libgtk-3-0 \
+                    tar
+

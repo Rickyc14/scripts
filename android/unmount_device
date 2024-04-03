@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+
+MOUNT_POINT_PATH="/mount/point/path"
+
+
+if ! command -v fusermount &> /dev/null
+then
+    echo "'fusermount' command not found!"
+    exit 1
+fi
+
+
+fusermount -u "${MOUNT_POINT_PATH}"
+
+echo "Done!"
+
