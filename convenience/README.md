@@ -94,9 +94,6 @@ grep -rl "Error at communicating with the API" ./ | xargs sed -i 's/Error at com
 grep --include=*.{html,po} -rinw . -e "Enter text here"
 
 
-grep --include=urls.py -Porh \"path\(\'(\K.*?)'\" ./django
-
-
 find . -path \"*/migrations/*.py\" -not -name \"__init__.py\" -delete
 
 
