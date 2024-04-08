@@ -31,6 +31,13 @@ docker build - < Dockerfile
 ```
 
 
+```bash
+docker stop "$(docker ps -a -q)"; \
+docker rm --force "$(docker ps -a -q)"; \
+docker system prune --all --force; \
+while read -r volume_name; do docker volume rm --force "${volume_name}"; done < <(docker volume ls --format "{{.Name}}")
+```
+
 
 
 
