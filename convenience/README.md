@@ -115,11 +115,6 @@ iw dev wlo1 link
 
 ## General
 
-```bash
-# Display date and time
-date +"%nDate:%t%d / %B / %Y%t(%A)%nTime:%t%T%t%t(tz: %Z)"
-```
-
 
 ```bash
 awk 'NR>=98{print}NR==105{exit}' ./templates/layout.html
@@ -148,6 +143,15 @@ find "${SEARCH_PATH}" -type f \
     -exec sha256sum {} \; | tee SHA256SUMS
 ```
 
+```bash
+while read file_path; do if grep -q 'find_string' "${file_path}"; then mv "${file_path}" DEST_DIR/; fi; done < <(find . -name "*.eml" -type f)
+```
+
+
+```bash
+# Display date and time
+date +"%nDate:%t%d / %B / %Y%t(%A)%nTime:%t%T%t%t(tz: %Z)"
+```
 
 
 
