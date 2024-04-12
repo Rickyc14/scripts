@@ -132,6 +132,9 @@ grep -rl "Error at communicating with the API" ./ | xargs sed -i 's/Error at com
 grep --include=*.{html,po} -rinw . -e "Enter text here"
 
 
+find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
+
+
 find . -path \"*/migrations/*.py\" -not -name \"__init__.py\" -delete
 
 

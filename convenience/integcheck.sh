@@ -3,13 +3,14 @@
 set -o nounset -o errexit -o noclobber -o pipefail
 
 
-if [ "${#}" -ne 1 ]; then
-    echo >&2 "1 argument required, ${#} provided"
+if [ "${#}" -eq 0 ]; then
+    echo "Usage: ${0} <directory-path>"
     exit 1
-fi
-
-if [ ! -d "${1}" ]; then
-  echo "${1} does not exist."
+elif [ "${#}" -ne 1 ]; then
+    echo >&2 "Expected 1 argument, got ${#}"
+    exit 1
+elif [ ! -d "${1}" ]; then
+  echo "'${1}' does not exist."
   exit 1
 fi
 
@@ -18,7 +19,7 @@ SEARCH_PATH="${1}"
 FULL_SEARCH_PATH="$(realpath "${SEARCH_PATH}")"
 
 
-echo "Searching in ${FULL_SEARCH_PATH}..."
+echo "Searching in '${FULL_SEARCH_PATH}'..."
 
 
 find "${SEARCH_PATH}" -type f \
