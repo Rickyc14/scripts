@@ -24,36 +24,26 @@ if [ ! -d "${BASE_DIR}" ] || [ -L "${BASE_DIR}" ]; then
     exit 1
 fi
 
+readonly EXPR='s#^\(.\{64\}\)\(\s\{2\}\)'"${BASE_DIR}"'/\(.*\)#\1\2\3#p'
+
 echo "Base directory: ${BASE_DIR}"
 
 while read -r dir_path; do
     dir_name="$(basename "${dir_path}")"
     stash_dir="${BASE_DIR}/.${dir_name}.stash"
 
-    if [ -d "${stash_dir}" ]; then
-        echo "Stash directory already exists: ${stash_dir}" >&2
-        exit 1
-    fi
-
-    if ! mkdir "${stash_dir}"; then
+    if [ -d "${stash_dir}" ] || ! mkdir "${stash_dir}"; then
         echo "Unable to create directory: ${stash_dir}" >&2
         exit 1
     fi
 
-    pushd "${BASE_DIR}" > /dev/null
-
-    if ! find "${dir_name}" -type f -exec sha256sum {} \; > "${stash_dir}/${dir_name}_SHA256SUMS"; then
-        echo "Unable to compute directory hash: ${dir_path}" >&2
-        popd > /dev/null
-        exit 1
-    fi
-    
-    popd > /dev/null
+    find "${dir_path}" -type f -exec sha256sum {} \; \
+        | sed -n "${EXPR}" > "${stash_dir}/${dir_name}.sha256"
     
     # compressed archive output
     comparch="${stash_dir}/${dir_name}.tar.bz2"
 
-    echo "Archiving and compressing: ${dir_name}"
+    echo -e "\nArchiving and compressing: ${dir_name}"
 
     tar --create \
         --backup=numbered \
@@ -64,14 +54,8 @@ while read -r dir_path; do
         --directory="${BASE_DIR}" \
         "${dir_name}" > "${comparch}.log"
     
-    pushd "${stash_dir}" > /dev/null
-
-    if ! sha256sum "$(basename "${comparch}")" > "${comparch}.sha256"; then
-        echo "Unable to compute file hash: ${comparch}" >&2
-        exit 1
-    fi
-    
-    popd > /dev/null
+    sha256sum "${comparch}" \
+        | sed -n "${EXPR}" > "${comparch}.sha256"
     
     # Make stash items read-only before archiving them
     chmod 444 "${stash_dir}/"*
@@ -91,18 +75,11 @@ while read -r dir_path; do
         --directory="${stash_dir}" \
         "${stash_items[@]}" > "${stash}.log"
 
-    pushd "${stash_dir}" > /dev/null
-
-    if ! sha256sum "$(basename "${stash}")" > "${stash}.sha256"; then
-        echo "Unable to compute file hash: ${stash}" >&2
-        popd > /dev/null
-        exit 1
-    fi
-
-    popd > /dev/null
+    sha256sum "${stash}" \
+        | sed -n "${EXPR}" > "${stash}.sha256"
 
     chmod 444 "${stash_dir}/"*
 
 done < <(find "${BASE_DIR}" -mindepth 1 -maxdepth 1 -type d)
 
-echo "Everything has been successfully stashed away."
+echo -e "\nEverything has been successfully stashed away."
