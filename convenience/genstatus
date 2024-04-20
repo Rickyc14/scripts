@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+set -o nounset -o errexit
+
+if [ "${#}" -eq 0 ]; then
+    echo "Usage: ${0} <directory-path>"
+    exit 0
+elif [ "${#}" -ne 1 ]; then
+    echo "Expected 1 argument, got ${#}" >&2
+    exit 1
+fi
+
+readonly BASE_DIR="${1%/}"
+
+if [ ! -d "${BASE_DIR}" ] || [ -L "${BASE_DIR}" ]; then
+    echo "Argument must be a regular directory: ${BASE_DIR}" >&2
+    exit 1
+fi
+
+readonly OUTPUT_FILE="${BASE_DIR}/status_report.csv"
+
+if [ -f "${OUTPUT_FILE}" ]; then
+    echo "Status report file already exists: ${OUTPUT_FILE}" >&2
+    exit 1
+fi
+
+declare -A metadata
+declare -a metaorder
+
+metadata['%n']='file name'
+metaorder+=( '%n' )
+
+metadata['%A']='permission bits and file type'
+metaorder+=( '%A' )
+
+metadata['%F']='file type'
+metaorder+=( '%F' )
+
+metadata['%w']='file birth'
+metaorder+=( '%w' )
+
+metadata['%x']='last access'
+metaorder+=( '%x' )
+
+metadata['%y']='last data modification'
+metaorder+=( '%y' )
+
+metadata['%z']='last status change'
+metaorder+=( '%z' )
+
+metadata['%g']='group ID of owner'
+metaorder+=( '%g' )
+
+metadata['%G']='group name of owner'
+metaorder+=( '%G' )
+
+metadata['%u']='user ID of owner'
+metaorder+=( '%u' )
+
+metadata['%U']='user name of owner'
+metaorder+=( '%U' )
+
+metadata['%s']='total size, in bytes'
+metaorder+=( '%s' )
+
+metadata['%m']='mount point'
+metaorder+=( '%m' )
+
+readonly metadata metaorder
+
+header=""
+format=""
+
+for key in "${metaorder[@]}"; do
+    header+="\"${metadata["${key}"]}\", "
+    format+="\"${key}\", "
+done
+
+echo "${header}" >> "${OUTPUT_FILE}"
+
+find "${BASE_DIR}" -not -path "${OUTPUT_FILE}" -type f,d \
+    -exec stat --format="${format}" {} \; >> "${OUTPUT_FILE}"
+
+chmod 444 "${OUTPUT_FILE}"
+

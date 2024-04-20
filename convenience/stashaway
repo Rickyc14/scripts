@@ -39,13 +39,17 @@ while read -r dir_path; do
         exit 1
     fi
 
+    echo -e "\nCurrent subdirectory: ${dir_name}"
+
+    echo "Computing checksums of files in the current subdirectory..."
+
     find "${dir_path}" -type f -exec sha256sum {} \; \
         | sed -n "${EXPR}" > "${stash_dir}/${dir_name}.sha256"
     
     # compressed archive output
     comparch="${stash_dir}/${dir_name}.tar.bz2"
 
-    echo -e "\nArchiving and compressing: ${dir_name}"
+    echo "Archiving and compressing current subdirectory..."
 
     tar --create \
         --backup=numbered \
@@ -56,18 +60,20 @@ while read -r dir_path; do
         --directory="${BASE_DIR}" \
         "${dir_name}" > "${comparch}.log"
 
+    echo "Computing compressed archive checksum..."
+
     sha256sum "${comparch}" \
         | sed -n "${EXPR//"${BASE_DIR}"/"${stash_dir}"}" > "${comparch}.sha256"
-    
+
     # Make stash items read-only before archiving them
     find "${stash_dir}" -type f -exec chmod 444 {} +
 
     # archived stash
     stash="${BASE_DIR}/${dir_name}.stash"
 
-    echo "Creating stash..."
-
     readarray -t stash_items < <(find "${stash_dir}" -type f -exec basename --multiple {} +)
+
+    echo "Creating stash..."
 
     tar --create \
         --backup=numbered \
@@ -77,6 +83,8 @@ while read -r dir_path; do
         "${stash_items[@]}"
 
     chmod 444 "${stash}"
+
+    echo "Computing stash checksum..."
 
     sha256sum "${stash}" | sed -n "${EXPR}" >> "${STASH_CHECKSUMS}"
 
