@@ -78,3 +78,6 @@ set -o nounset -o errexit -o noclobber -o pipefail
 - [Bash Pitfalls](https://mywiki.wooledge.org/BashPitfalls)
 - [Bash Reference Sheet](https://mywiki.wooledge.org/BashSheet)
 - [Bash Guide](https://mywiki.wooledge.org/BashGuide)
+- [TAR Manual - Options Used by ‘--extract’](https://www.gnu.org/software/tar/manual/html_section/extract-options.html)
+- [tar (1)](https://www.man7.org/linux/man-pages/man1/tar.1.html)
+
