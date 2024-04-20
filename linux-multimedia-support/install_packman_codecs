@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
+#       
+# Install codecs from packman repository.
 
+set -o errexit
 
 sudo zypper refresh
-
 
 # Add packman repository
 sudo zypper addrepo \
@@ -11,28 +13,44 @@ sudo zypper addrepo \
     --priority 90 \
     'https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials' packman-essentials
 
-
 # Switch system packages to those in packman
 # as a mix of both can cause a variety of issues.
 sudo zypper dist-upgrade --from packman-essentials --allow-vendor-change
 
-
-# Install required packages
-sudo zypper install \
-    libavcodec56 \
-    libavcodec57 \
-    libavcodec58 \
-    libavformat56 \
-    libavformat57 \
-    libavformat58 \
-    libavdevice56 \
-    libavdevice57 \
-    libavdevice58
-
+sudo zypper install --from "packman-essentials" \
+    libavcodec56 libavcodec57 libavcodec58_134 libavcodec59 \
+    libavdevice56 libavdevice57 libavdevice58_13 libavdevice59 \
+    libavfilter5 libavfilter6 libavfilter7_110 libavfilter8 \
+    libavformat56 libavformat57 libavformat58_76 libavformat59 \
+    libavresample2 libavresample3 libavresample4_0 \
+    libavutil54 libavutil55 libavutil56_70 libavutil57 \
+    libdca0 \
+    libde265-0 \
+    libfaac0 \
+    libfaad2 \
+    libfdk-aac2 \
+    libgbm1 \
+    libheif1 \
+    libopenaptx0 \
+    libopencore-amrnb0 libopencore-amrwb0 \
+    libpostproc53 libpostproc54 libpostproc55_9 libpostproc56 \
+    libquicktime0 \
+    librtmp1 \
+    libswresample1 libswresample2 libswresample3_9 libswresample4 \
+    libswscale3 libswscale4 libswscale5_9 libswscale6 \
+    libvo-amrwbenc0 \
+    libx264-164 \
+    libx265-199 \
+    libxvidcore4 \
+    libopenh264-7 \
+    libavdevice59 \
+    libpostproc56 \
+    gdk-pixbuf-loader-libheif \
+    gstreamer-plugins-libav gstreamer-plugins-ugly-codecs \
+    Mesa Mesa-dri Mesa-gallium Mesa-libEGL1 Mesa-libGL1 Mesa-libglapi0 Mesa-libva
 
 # Update system
 sudo zypper up --allow-vendor-change
-
 
 echo "Done!"
 
