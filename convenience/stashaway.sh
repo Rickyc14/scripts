@@ -24,6 +24,8 @@ if [ ! -d "${BASE_DIR}" ] || [ -L "${BASE_DIR}" ]; then
     exit 1
 fi
 
+readonly STASH_CHECKSUMS="${BASE_DIR}/SHA256SUMS"
+
 readonly EXPR='s#^\(.\{64\}\)\(\s\{2\}\)'"${BASE_DIR}"'/\(.*\)#\1\2\3#p'
 
 echo "Base directory: ${BASE_DIR}"
@@ -53,15 +55,15 @@ while read -r dir_path; do
         --file="${comparch}" \
         --directory="${BASE_DIR}" \
         "${dir_name}" > "${comparch}.log"
-    
+
     sha256sum "${comparch}" \
-        | sed -n "${EXPR}" > "${comparch}.sha256"
+        | sed -n "${EXPR//"${BASE_DIR}"/"${stash_dir}"}" > "${comparch}.sha256"
     
     # Make stash items read-only before archiving them
-    chmod 444 "${stash_dir}/"*
+    find "${stash_dir}" -type f -exec chmod 444 {} +
 
     # archived stash
-    stash="${stash_dir}/${dir_name}.stash" 
+    stash="${BASE_DIR}/${dir_name}.stash"
 
     echo "Creating stash..."
 
@@ -70,16 +72,16 @@ while read -r dir_path; do
     tar --create \
         --backup=numbered \
         --force-local \
-        --verbose --verbose --verbose \
         --file="${stash}" \
         --directory="${stash_dir}" \
-        "${stash_items[@]}" > "${stash}.log"
+        "${stash_items[@]}"
 
-    sha256sum "${stash}" \
-        | sed -n "${EXPR}" > "${stash}.sha256"
+    chmod 444 "${stash}"
 
-    chmod 444 "${stash_dir}/"*
+    sha256sum "${stash}" | sed -n "${EXPR}" >> "${STASH_CHECKSUMS}"
 
 done < <(find "${BASE_DIR}" -mindepth 1 -maxdepth 1 -type d)
+
+chmod 444 "${STASH_CHECKSUMS}"
 
 echo -e "\nEverything has been successfully stashed away."
