@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#       
+# This script generates text based on a provided template.
+
+set -o nounset -o errexit -o pipefail
+
+if [ "${#}" -eq 0 ]; then
+    echo "${0} TEMPLATE_FILE --template_arg_a='value 1' --template_arg_b=150 [...]"
+    exit 0
+fi
+
+if ! TEMPLATE_FILE="$(realpath --quiet --canonicalize-existing "${1}")"; then
+    echo "Invalid template: ${1}" >&2
+    exit 1
+fi
+
+readonly TEMPLATE_FILE
+
+shift
+
+readarray -t templ_params \
+    < <(grep -oP '{{\s*\K[a-zA-Z0-9_]+(?=\s*}})' "${TEMPLATE_FILE}" \
+    | tr '[:lower:]' '[:upper:]' | sort | uniq)
+
+readonly templ_params
+
+if [ "${#}" -eq 0 ]; then
+    usage="${0} FILE"
+    for param in "${templ_params[@]}"; do
+        usage+=" --${param}=${param,,}_value"
+    done
+    echo "${usage}"
+    exit 0
+fi
+
+declare -A templ_args=()
+
+while [[ ${#} -gt 0 ]]; do
+    if [[ "${1}" != *"--"*"="* ]]; then
+        echo "Invalid argument format: ${1}" >&2
+        exit 1
+    fi
+
+    key="${1%%=*}"         # Everything before the first '='
+    value="${1#*=}"        # Everything after the first '='
+    key="${key#--}"        # Remove leading '--' from the key
+    key="${key^^}"         # Convert to uppercase 
+
+    if [[ -v templ_args["${key}"] ]]; then
+        echo "Duplicate arguments: ${1}" >&2
+        exit 1
+    elif [[ ! " ${templ_params[*]} " =~ [[:space:]]${key}[[:space:]] ]]; then
+        echo "Unexpected argument: ${1}" >&2
+        exit 1
+    elif [[ -z "${value}" ]]; then
+        echo "Argument must not be empty: ${1}" >&2
+        exit 1
+    fi
+    
+    templ_args["${key}"]="${value}"
+
+    shift
+done
+
+templ_content="$(cat "${TEMPLATE_FILE}")"
+
+for param in "${templ_params[@]}"; do
+    if [[ -v templ_args["${param}"] ]]; then
+        templ_content="$(sed "s/{{\s*${param}\s*}}/${templ_args[${param}]}/gI" <<< "${templ_content}")"
+    else
+        echo "Missing required argument: ${param}" >&2
+        exit 1
+    fi
+done
+
+echo "${templ_content}"
+
