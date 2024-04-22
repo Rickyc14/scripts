@@ -1,65 +1,92 @@
 # Convenience
 
 
+**Summary**:
 
-## Archiving
+- Archiving and compressing
+- Hashing
+- System
+- Networking
+- General
+- find
+- Multimedia
+- KDE
+- Functions
+- References
+
+
+---
+
+
+## Archiving and compressing
+
+`tar` **compression options**:
+
+- `--bzip2`    Filter the archive through bzip2
+- `--xz`       Filter the archive through xz
+- `--lzip`     Filter the archive through lzip
+- `--lzma`     Filter the archive through lzma
+- `--lzop`     Filter the archive through lzop
+- `--gunzip`   Filter the archive through gzip
+- `--zstd`     Filter the archive through zstd
+
+
+**Create archive**:
 
 ```bash
-# Create archive
+tar --create --verbose --gunzip --force-local --file="${OUTPUT}.tar.gz" --directory="${DIR}" "${SUB_DIR}"
+```
 
-# tar --create --verbose --gunzip --force-local --directory="${HOME}" --file="${1}.tar.gz" "${1}"
-# tar --create --verbose --gunzip --force-local --file="${1}.tar.gz" --directory="${HOME}" "${dir}"
+```bash
+OUTPUT="compressed_archive"
+DIR_PATH="/path/to/directory"
 
 tar --create \
     --verbose \
     --gunzip \
     --force-local \
-    --file="archive_output_file_name.tar.gz" \
-    --directory="$(dirname "${FULL_PATH}")" \
-    "$(basename "${FULL_PATH}")"
+    --file="${OUTPUT}.tar.gz" \
+    --directory="$(dirname "${DIR_PATH}")" \
+    "$(basename "${DIR_PATH}")"
+```
 
-#    Compression options
-#        -a, --auto-compress
-#               Use archive suffix to determine the compression program.
-#
-#        -I, --use-compress-program=COMMAND
-#               Filter data through COMMAND.  It must accept the -d option, for decompression.  The argument can contain command line options.
-#
-#        -j, --bzip2
-#               Filter the archive through bzip2(1).
-#
-#        -J, --xz
-#               Filter the archive through xz(1).
-#
-#        --lzip Filter the archive through lzip(1).
-#
-#        --lzma Filter the archive through lzma(1).
-#
-#        --lzop Filter the archive through lzop(1).
-#
-#        --no-auto-compress
-#               Do not use archive suffix to determine the compression program.
-#
-#        -z, --gzip, --gunzip, --ungzip
-#               Filter the archive through gzip(1).
-#
-#        -Z, --compress, --uncompress
-#               Filter the archive through compress(1).
-#
-#        --zstd Filter the archive through zstd(1).
+The `--directory=DIR` option (`-C DIR`) changes to `DIR` before performing any operations. This option is order‐sensitive, i.e. it affects all options that follow.
+
+
+```bash
+DIR_PATH="/path/to/directory"
+dirname "${DIR_PATH}"     # /path/to
+basename "${DIR_PATH}"    # directory
 ```
 
 
 ```bash
-# The following is an exemplary command of how to archive your system
+tar --create \
+    --backup=numbered \
+    --force-local \
+    --verbose --verbose --verbose \
+    --bzip2 \
+    --file=output.tar.bz2 \
+    --directory="base_dir" \
+    "dir_name" > archive.log
+```
+
+
+**archive and compress system**:
+
+```bash
 tar -cvpzf backup.tar.gz --exclude=/backup.tar.gz --one-file-system /
 ```
 
 
+`zip` **command**:
+
 ```bash
-zip -r HomeLibZ.zip HomeLib
+zip -r FILE.zip FILE
 ```
 
+
+## Hashing
 
 ```bash
 find -type f -exec md5sum "{}" + > checklist.chk
@@ -73,7 +100,14 @@ echo -n foobar | shasum -a 256
 echo -n "foobar" | openssl dgst -sha256 # -md4, -md5, -ripemd160, -sha, -sha1, -sha224, -sha384, -sha512, -whirlpool
 ```
 
+**Verify file checksum**:
 
+```bash
+if ! sha256sum --check --quiet --status "${FILE}"; then
+    echo "Failed checksum verification!" 1>&2
+    exit 1
+fi
+```
 
 
 ## System
@@ -84,17 +118,39 @@ sudo systemctl list-units --type=service --state=running
 
 
 
+**openSUSE**:
+
+```bash
+sudo zypper search --installed-only --requires "${PACKAGE_NAME}"
+
+sudo zypper info \
+    --conflicts \
+    --provides \
+    --requires \
+    --recommends \
+    --supplements \
+    "${PACKAGE_NAME}"
+```
+
 
 
 ## Networking
 
+**Connect to Network**:
+
 ```bash
-# Connect to Network
 nmcli --ask con up NETWORK_SSID
+```
 
-# Display available Wi-Fi access points
+
+**Display available Wi-Fi access points**:
+
+```bash
 nmcli --pretty device wifi list
+```
 
+
+```bash
 nmcli dev wifi connect <name> password <password>
 
 sudo traceroute -T -p 443 8.8.8.8  # replace IP
@@ -105,11 +161,17 @@ sudo netstat -tunlp
 
 route -n
 
-# show or manipulate wireless devices and their configuration
-iw dev wlo1 link
+sudo traceroute --max-hops=90 --queries=10 --wait=20 google.com
+
+tracepath -b youtube.com
 ```
 
 
+**show or manipulate wireless devices and their configuration**:
+
+```bash
+iw dev wlo1 link
+```
 
 
 
@@ -139,12 +201,14 @@ find . -path \"*/migrations/*.py\" -not -name \"__init__.py\" -delete
 
 
 find . -path \"*/migrations/*.pyc\"  -delete
+```
 
-
+```bash
 find "${SEARCH_PATH}" -type f \
     \( -size +100M -or -iregex ".*\.\(tar\|tar\.gz\|tgz\|tar\.bz2\|tar\.lz\|tar\.lrz\|tar\.lzo\|tar\.xz\|zip\|7z\)$" \) \
     -exec sha256sum {} \; | tee SHA256SUMS
 ```
+
 
 ```bash
 while read file_path; do if grep -q 'find_string' "${file_path}"; then mv "${file_path}" DEST_DIR/; fi; done < <(find . -name "*.eml" -type f)
@@ -154,6 +218,54 @@ while read file_path; do if grep -q 'find_string' "${file_path}"; then mv "${fil
 ```bash
 # Display date and time
 date +"%nDate:%t%d / %B / %Y%t(%A)%nTime:%t%T%t%t(tz: %Z)"
+```
+
+
+```bash
+# Fix PDF font
+ps2pdf -sFONTPATH="." INPUT_FILE.pdf OUTPUT_FILE.pdf
+
+# "convert" is a great tool to merge images and convert them into a PDF file
+# https://imagemagick.org/script/license.php
+convert Image-0001.png Image-0002.png Image-0003.png OUTPUT_FILE.pdf
+
+# Or (do not add quotes)
+convert $(ls -v Image-000*.png) OUTPUT_FILE.pdf
+```
+
+```bash
+##
+## find
+##
+
+# Find files in "/my/path" bigger than 2 gibibytes and sort them from largest to smallest
+find /my/path -type f -size +2G -exec du -h {} + | sort -rh | awk '{print $1, $2}'
+
+find . -type f -mtime 0
+
+find . -newermt "yesterday" -type f -exec cp -t ./2024-04-15/ {} +
+
+find /path/to/search/ -type f -name "glob-to-find-files" | xargs cp -t /target/path/
+find /PATH/TO/YOUR/FILES -name NAME.EXT -exec cp -rfp {} /DST_DIR \;
+find . -mtime 1 -exec cp -t ~/test/ {} +
+find . -ctime 15 -exec cp {} ../otherfolder \;
+
+
+# To find all files modified in the last 24 hours (last full day) in a particular specific directory and its sub-directories
+# The "-" before "1" is important, it means anything changed one day or less ago;
+# A "+" before "1" would instead mean anything changed at least one day ago;
+# while having nothing before the "1" would have meant it was changed exacted one day ago, no more, no less.
+find /my/path -mtime -1 -ls
+
+# last 2 hours
+find . -mmin -120 -ls
+
+# human-readable time units (-newerXY)
+find <directory> -newermt "-24 hours" -ls
+find <directory> -newermt "1 day ago" -ls
+find <directory> -newermt "yesterday" -ls
+
+find . -newermt "yesterday"
 ```
 
 
@@ -172,13 +284,14 @@ ffmpeg  -i input_video.MP4 -lossless 1 output_video.webm
 
 ## KDE
 
-```bash
-# Display clipboard history
+**Display clipboard history**:
 
+```bash
 qdbus-qt5 org.kde.klipper /klipper org.kde.klipper.klipper.getClipboardHistoryMenu
 ```
 
-#### Konsole
+
+**Konsole**:
 
 ```
 Ctrl + Shift + M ==> Show Menubar
@@ -195,6 +308,33 @@ Ctrl + Alt + T ==> opens Konsole
 ```
 
 
+
+
+## Functions
+
+**Logging**:
+
+```bash
+log_error() {
+    echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')] ERROR - $*" >&2
+}
+
+log_info() {
+    echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')] INFO  - $*"
+}
+```
+
+**File type**:
+
+```bash
+is_regular_file() {
+    [ ! -L "${1}" ] && [ -f "${1}" ]
+}
+
+is_regular_dir() {
+    [ ! -L "${1}" ] && [ -d "${1}" ]
+}
+```
 
 
 ## References
