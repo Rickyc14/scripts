@@ -7,9 +7,6 @@
 
 ```bash
 docker-compose run postgres psql -h hostname -U username -d dbname
-
-
-docker compose run postgres psql -h hostname -U username -d dbname
 ```
 
 
@@ -51,6 +48,8 @@ sudo zypper install docker \
 sudo systemctl enable docker
 
 sudo usermod -G docker -a "${USER}"
+
+newgrp docker
 
 sudo systemctl restart docker
 
