@@ -1,15 +1,26 @@
 # Crypt
 
 
+- **Symmetric** encryption: same key for both encryption and decryption
+- **Asymmetric** encryption: uses a pair of keys (a public key and a private key)
+  - encrypt data with the public key, and only the corresponding private key can decrypt it.
+  - does not involve symmetric keys for the encryption process.
+
+**Generate GPG key pair**:
+
+```bash
+gpg --full-generate-key
+```
 
 
 ## Encryption
 
 ```bash
-gpg --verbose --output vault.tar.bz2.gpg --symmetric --no-symkey-cache vault.tar.bz2
+gpg --verbose --output ENCRYPTED_FILE --symmetric --no-symkey-cache FILE_TO_ENCRYPT
 
+# or
 
-# gpg --verbose --log-time --log-file test.gpg.log --output test.tar.bz2.gpg --symmetric --no-symkey-cache test.tar.bz2
+gpg --verbose --log-time --log-file LOG_FILE --output ENCRYPTED_FILE --symmetric --no-symkey-cache FILE_TO_ENCRYPT
 ```
 
 
@@ -17,15 +28,18 @@ gpg --verbose --output vault.tar.bz2.gpg --symmetric --no-symkey-cache vault.tar
 ## Decryption
 
 ```bash
-gpg --verbose --output decrypt-output_vault.tar.bz2  --decrypt --no-symkey-cache vault.tar.bz2.gpg
+gpg --verbose --output DECRYPTED_FILE --decrypt --no-symkey-cache ENCRYPTED_FILE
 
+# or
 
-# gpg --verbose --log-time --log-file decrypt-out.log --output decrypt-out_test.tar.bz2  --decrypt --no-symkey-cache test.tar.bz2.gpg
+gpg --verbose --log-time --log-file LOG_FILE --output DECRYPTED_FILE  --decrypt --no-symkey-cache ENCRYPTED_FILE
 ```
 
 
 
-## Reload Agent
+## GPG Agent
+
+**Reload Agent**:
 
 ```bash
 echo RELOADAGENT | gpg-connect-agent
