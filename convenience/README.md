@@ -220,6 +220,15 @@ while read file_path; do if grep -q 'find_string' "${file_path}"; then mv "${fil
 date +"%nDate:%t%d / %B / %Y%t(%A)%nTime:%t%T%t%t(tz: %Z)"
 ```
 
+```bash
+# Check if two directories are the same
+diff -r -q /path/to/directory1 /path/to/directory2
+
+#       -r, --recursive
+#              recursively compare any subdirectories found
+#       -q, --brief
+#              report only when files differ
+```
 
 ```bash
 # Fix PDF font
