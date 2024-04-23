@@ -6,6 +6,11 @@
   - encrypt data with the public key, and only the corresponding private key can decrypt it.
   - does not involve symmetric keys for the encryption process.
 
+
+_Symmetric encryption is generally preferred for encrypting large files due to its efficiency and speed. Asymmetric encryption would be impractical for large files because of the significant computational resources and time it would require._
+
+
+
 **Generate GPG key pair**:
 
 ```bash
