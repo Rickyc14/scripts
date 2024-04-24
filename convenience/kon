@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+#
+# Save or restore Konsole window.
+
+set -o nounset -o errexit
+
+readonly OPTS="r:s::v"
+readonly LONG_OPTS="restore:,save::,verbose"
+readonly USAGE_MSG="
+USAGE:
+    ${0} [OPTION]... [FILE]...
+
+       -r, --restore=FILE
+               Restore Konsole window from specified file
+       -s, --save[=FILE]
+               Save current Konsole window to file
+       -v, --verbose
+               Enable verbose output
+
+EXAMPLES:
+    ${0} -skonsole_backup.txt
+    ${0} --save=../konsole_backup.txt
+    ${0} --save
+    ${0} -s -v
+    ${0} --restore konsole_backup.txt
+
+NOTES:
+    The '-s' option accepts an optional argument. If you are providing this
+    argument, it must be written directly after the option character, like
+    so: '-sFILE'. Similarly, the '--save' option also accepts an optional
+    argument. However, if you are providing an argument, a '=' character
+    must separate the option from its value, as in '--save=FILE'."
+
+if [ "${#}" -eq "0" ]; then
+    echo "At least one argument is required." >&2
+    echo "${USAGE_MSG}" >&2
+    exit 1
+fi
+
+if ! PARSED_OPTS=$(getopt -n "${0}" -o "${OPTS}" -l "${LONG_OPTS}" -- "${@}"); then
+    echo "${USAGE_MSG}" >&2
+    exit 1
+fi
+
+eval set -- "${PARSED_OPTS}"
+
+RESTORE=""
+SAVE=""
+VERBOSE=""
+
+while true; do
+    case "${1}" in
+        -r|--restore)
+            RESTORE="${2}"
+            shift 2
+            ;;
+        -s|--save)
+            case "${2}" in
+                "")
+                    SAVE="$(basename "${0}")_$(date +'%Y-%m-%d').txt"
+                    shift 2
+                    ;;
+                *)
+                    SAVE="${2}"
+                    shift 2
+                    ;;
+            esac
+            ;;
+        -v|--verbose)
+            VERBOSE=1
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Programming error." >&2
+            exit 1
+            ;;
+    esac
+done
+
+if [ -n "${SAVE}" ] && [ -n "${RESTORE}" ]; then
+    echo "Invalid arguments: --save and --restore cannot be used at the same time." >&2
+    exit 1
+fi
+
+if [ -z "${SAVE}" ] && [ -z "${RESTORE}" ]; then
+    echo "Invalid arguments: either --save or --restore must be specified." >&2
+    exit 1
+fi
+
+if [ -n "${VERBOSE}" ]; then
+    echo "qdbus6                $(command -v qdbus6)"
+    echo "qdbus-qt5             $(command -v qdbus-qt5)"
+    echo "Konsole Process ID    $(pidof -s konsole)"
+    echo "KONSOLE_DBUS_SERVICE  ${KONSOLE_DBUS_SERVICE}"
+    echo "KONSOLE_DBUS_WINDOW   ${KONSOLE_DBUS_WINDOW}"
+    echo "KONSOLE_DBUS_SESSION  ${KONSOLE_DBUS_SESSION}"
+    echo "Session Count         $(qdbus6 "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_WINDOW}" sessionCount)"
+    echo "Session               $(qdbus6 "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_WINDOW}" currentSession)"
+    echo "Session Process ID    $(qdbus6 "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_SESSION}" processId)"
+fi
+
+if [ -n "${SAVE}" ]; then
+    if [ -e "${SAVE}" ]; then
+        echo "Save file already exists: ${SAVE}" >&2
+        exit 1
+    fi
+
+    while read -r session_number; do
+        session="/Sessions/${session_number}"
+        session_pid="$(qdbus6 "${KONSOLE_DBUS_SERVICE}" "${session}" processId)"
+        session_dir="$(pwdx ${session_pid} | sed -e "s/^[0-9]*: //")"
+        session_profile="$(qdbus6 "${KONSOLE_DBUS_SERVICE}" "${session}" profile)"
+        konsole_tab_config="workdir: ${session_dir};; profile: ${session_profile}"
+        echo "${konsole_tab_config}" >> "${SAVE}"
+    done < <(qdbus6 "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_WINDOW}" sessionList)
+
+    chmod 444 "${SAVE}"
+
+    echo "Konsole window has been saved: ${SAVE}"
+fi
+
+if [ -n "${RESTORE}" ]; then
+    if [ ! -f "${RESTORE}" ]; then
+        echo "File does not exist: ${RESTORE}" >&2
+        exit 1
+    fi
+
+    konsole --tabs-from-file "${RESTORE}" &
+fi
+
