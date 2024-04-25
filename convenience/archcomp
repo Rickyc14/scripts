@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# Archive and compress the immediate subdirectories within
+# a specified directory (provided as a script argument).
+
+set -o nounset -o errexit
+
+if [ "${#}" -eq 0 ]; then
+    echo "Usage: ${0} DIRECTORY" >&2
+    exit 1
+elif [ "${#}" -ne 1 ]; then
+    echo "Expected 1 argument, got ${#}." >&2
+    exit 1
+fi
+
+if ! BASE_DIR="$(realpath --canonicalize-existing "${1}")"; then
+    echo "Argument is not a valid path: ${1}" >&2
+    exit 1
+fi
+
+readonly BASE_DIR
+
+if [ ! -d "${BASE_DIR}" ] || [ -L "${BASE_DIR}" ]; then
+    echo "Argument must be a regular directory: ${BASE_DIR}" >&2
+    exit 1
+fi
+
+echo "Base directory: ${BASE_DIR}"
+
+while read -r dir_path; do
+    if [ -d "${dir_path}" ]; then
+        dir_name="$(basename "${dir_path}")"
+        output_file="${BASE_DIR}/${dir_name}.tar.bz2"
+        echo "Archiving and compressing: ${dir_name}"
+        if [ -e "${output_file}" ]; then
+            echo "Skipping ${dir_name} because compressed archive already exists."
+        else
+            tar --create \
+                --bzip2 \
+                --force-local \
+                --file="${output_file}" \
+                --directory="${BASE_DIR}" \
+                "${dir_name}"
+        fi
+    fi
+done < <(find "${BASE_DIR}" -mindepth 1 -maxdepth 1 -type d)
+
+echo "All immediate subdirectories have been archived and compressed."
+
