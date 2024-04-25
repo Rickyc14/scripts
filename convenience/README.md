@@ -279,19 +279,44 @@ find . -newermt "yesterday"
 
 
 
-## Multimedia
+**Get the 10 latest files by time of last data modification**:
 
 ```bash
-# convert video
-
-ffmpeg  -i input_video.MP4 -lossless 1 output_video.webm
+find . -type f -exec stat -c '%Y %n' {} \; | sort -nr | cut -d' ' -f2- | awk 'NR==1,NR==10 {print}'
 ```
 
 
 
 
 
+## Multimedia
+
+
+**Convert video**:
+
+```bash
+ffmpeg  -i input_video.MP4 -lossless 1 output_video.webm
+```
+
+
+
+
 ## KDE
+
+
+```bash
+echo "${KONSOLE_DBUS_SERVICE}"
+echo "${KONSOLE_DBUS_WINDOW}"
+echo "${KONSOLE_DBUS_SESSION}"
+
+qdbus6 "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_WINDOW}"
+qdbus6 "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_SESSION}"
+
+qdbus6 "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_WINDOW}" sessionCount
+qdbus6 "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_WINDOW}" currentSession
+qdbus6 "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_SESSION}" processId
+```
+
 
 **Display clipboard history**:
 
