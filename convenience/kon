@@ -112,7 +112,7 @@ if [ -n "${SAVE}" ]; then
     while read -r session_number; do
         session="/Sessions/${session_number}"
         session_pid="$(qdbus6 "${KONSOLE_DBUS_SERVICE}" "${session}" processId)"
-        session_dir="$(pwdx ${session_pid} | sed -e "s/^[0-9]*: //")"
+        session_dir="$(pwdx "${session_pid}" | sed -e "s/^[0-9]*: //")"
         session_profile="$(qdbus6 "${KONSOLE_DBUS_SERVICE}" "${session}" profile)"
         konsole_tab_config="workdir: ${session_dir};; profile: ${session_profile}"
         echo "${konsole_tab_config}" >> "${SAVE}"
