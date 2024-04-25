@@ -15,7 +15,7 @@
 - References
 
 
----
+<br><br>
 
 
 ## Archiving and compressing
@@ -86,6 +86,9 @@ zip -r FILE.zip FILE
 ```
 
 
+<br><br>
+
+
 ## Hashing
 
 ```bash
@@ -110,6 +113,9 @@ fi
 ```
 
 
+<br><br>
+
+
 ## System
 
 ```bash
@@ -132,6 +138,8 @@ sudo zypper info \
     "${PACKAGE_NAME}"
 ```
 
+
+<br><br>
 
 
 ## Networking
@@ -173,6 +181,8 @@ tracepath -b youtube.com
 iw dev wlo1 link
 ```
 
+
+<br><br>
 
 
 ## General
@@ -220,15 +230,16 @@ while read file_path; do if grep -q 'find_string' "${file_path}"; then mv "${fil
 date +"%nDate:%t%d / %B / %Y%t(%A)%nTime:%t%T%t%t(tz: %Z)"
 ```
 
-```bash
-# Check if two directories are the same
-diff -r -q /path/to/directory1 /path/to/directory2
+**Check if two directories are the same**:
 
-#       -r, --recursive
-#              recursively compare any subdirectories found
-#       -q, --brief
-#              report only when files differ
+- `-r`, `--recursive`: recursively compare any subdirectories found
+- `-q`, `--brief`: report only when files differ
+
+```bash
+diff -r -q /path/to/directory1 /path/to/directory2
 ```
+
+
 
 ```bash
 # Fix PDF font
@@ -246,9 +257,6 @@ convert $(ls -v Image-000*.png) OUTPUT_FILE.pdf
 ##
 ## find
 ##
-
-# Find files in "/my/path" bigger than 2 gibibytes and sort them from largest to smallest
-find /my/path -type f -size +2G -exec du -h {} + | sort -rh | awk '{print $1, $2}'
 
 find . -type f -mtime 0
 
@@ -286,7 +294,14 @@ find . -type f -exec stat -c '%Y %n' {} \; | sort -nr | cut -d' ' -f2- | awk 'NR
 ```
 
 
+**Find files in "/my/path" bigger than 2 gibibytes and sort them from largest to smallest**:
 
+```bash
+find /my/path -type f -size +2G -exec du -h {} + | sort -rh | awk '{print $1, $2}'
+```
+
+
+<br><br>
 
 
 ## Multimedia
@@ -299,6 +314,7 @@ ffmpeg  -i input_video.MP4 -lossless 1 output_video.webm
 ```
 
 
+<br><br>
 
 
 ## KDE
@@ -342,6 +358,7 @@ Ctrl + Alt + T ==> opens Konsole
 ```
 
 
+<br><br>
 
 
 ## Functions
@@ -369,6 +386,9 @@ is_regular_dir() {
     [ ! -L "${1}" ] && [ -d "${1}" ]
 }
 ```
+
+
+<br><br>
 
 
 ## References
