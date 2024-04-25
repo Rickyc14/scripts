@@ -8,7 +8,6 @@
 - System
 - Networking
 - General
-- find
 - Multimedia
 - KDE
 - Functions
