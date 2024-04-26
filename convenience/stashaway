@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #
 # Archive and compress the immediate subdirectories within
-# a specified directory, provided as a script argument, and
-# compute the checksums for both the resulting compressed
-# archives and the files within each immediate subdirectory.
+# a specified directory, which is passed as an argument to
+# the script. Additionally, compute checksums for all the
+# generated files, as well as for all the files contained
+# within each immediate subdirectory.
 
 set -o nounset -o errexit -o noclobber -o pipefail
 
@@ -27,37 +28,28 @@ if [ ! -d "${BASE_DIR}" ] || [ -L "${BASE_DIR}" ]; then
     exit 1
 fi
 
-readonly STASH_CHECKSUMS="${BASE_DIR}/SHA256SUMS"
-
-if [ -e "${STASH_CHECKSUMS}" ]; then
-    echo "Checksums file already exists: ${STASH_CHECKSUMS}" >&2
-    exit 1
-fi
-
 readonly EXPR='s#^\(.\{64\}\)\(\s\{2\}\)'"${BASE_DIR}"'/\(.*\)$#\1\2\3#p'
 
-echo "Base directory: ${BASE_DIR}"
+echo -e "\nBase directory: ${BASE_DIR}"
 
 while read -r dir_path; do
     dir_name="$(basename "${dir_path}")"
-    stash_dir="${BASE_DIR}/.${dir_name}.stash"
 
     echo -e "\nCurrent subdirectory: ${dir_name}"
 
-    if [ -d "${stash_dir}" ] || ! mkdir "${stash_dir}"; then
-        echo "Unable to create directory: ${stash_dir}" >&2
-        exit 1
-    fi
+    dir_checksums="${BASE_DIR}/.${dir_name}.sha256"
+    comparch="${BASE_DIR}/.${dir_name}.tar.bz2"
+    comparch_log="${comparch}.log"
+    comparch_checksum="${comparch}.sha256"
+    stash="${BASE_DIR}/.${dir_name}.stash"
+    stash_checksum="${stash}.sha256"
 
-    echo "Computing checksums of files in the current subdirectory..."
+    echo -e "\tComputing checksums of files in the current subdirectory..."
 
-    find "${dir_path}" -type f -exec sha256sum {} + \
-        | sed -n "${EXPR}" > "${stash_dir}/${dir_name}.sha256"
+    find "${dir_path}" -type f -exec sha256sum '{}' '+' \
+        | sed -n "${EXPR}" > "${dir_checksums}"
 
-    echo "Archiving and compressing current subdirectory..."
-
-    # compressed archive output
-    comparch="${stash_dir}/${dir_name}.tar.bz2"
+    echo -e "\tArchiving and compressing current subdirectory..."
 
     tar --create \
         --backup=numbered \
@@ -66,53 +58,39 @@ while read -r dir_path; do
         --bzip2 \
         --file="${comparch}" \
         --directory="${BASE_DIR}" \
-        "${dir_name}" > "${comparch}.log"
+        "${dir_name}" > "${comparch_log}"
 
-    echo "Computing compressed archive checksum..."
+    echo -e "\tComputing compressed archive checksum..."
 
-    sha256sum "${comparch}" \
-        | sed -n "${EXPR//"${BASE_DIR}"/"${stash_dir}"}" > "${comparch}.sha256"
+    sha256sum "${comparch}" | sed -n "${EXPR}" > "${comparch_checksum}"
 
-    # Make stash items read-only before archiving them
-    find "${stash_dir}" -type f -exec chmod 444 {} +
+    echo -e "\tCreating stash..."
 
-    # archived stash
-    stash="${BASE_DIR}/${dir_name}.stash"
+    chmod 444 "${dir_checksums}" "${comparch}" "${comparch_log}" "${comparch_checksum}"
 
-    readarray -t stash_items < <(find "${stash_dir}" -type f -exec basename --multiple {} +)
-
-    echo "Creating stash..."
+    readarray -t stash_items < <(basename --multiple \
+        "${dir_checksums}" "${comparch}" "${comparch_log}" "${comparch_checksum}")
 
     tar --create \
         --backup=numbered \
         --force-local \
         --file="${stash}" \
-        --directory="${stash_dir}" \
+        --directory="${BASE_DIR}" \
         "${stash_items[@]}"
 
-    chmod 444 "${stash}"
+    echo -e "\tComputing stash checksum..."
 
-    echo "Computing stash checksum..."
+    sha256sum "${stash}" | sed -n "${EXPR}" > "${stash_checksum}"
 
-    sha256sum "${stash}" | sed -n "${EXPR}" >> "${STASH_CHECKSUMS}"
+    chmod 444 "${stash}" "${stash_checksum}"
 
 done < <(find "${BASE_DIR}" -mindepth 1 -maxdepth 1 -type d)
 
-chmod 444 "${STASH_CHECKSUMS}"
+echo -e "\nVerifying stashed files..."
 
-echo "Verifying stash files checksums..."
-
-if ! find "$(dirname "${STASH_CHECKSUMS}")" -name "$(basename "${STASH_CHECKSUMS}")" -type f \
-    -execdir sha256sum --check --quiet --status --strict {} +; then
+if ! find "${BASE_DIR}" -mindepth 1 -maxdepth 1 -name "*.sha256" -type f \
+    -execdir sha256sum --check --quiet --status --strict '{}' '+'; then
     echo "Stash files failed checksum varification." >&2
-    exit 1
-fi
-
-echo "Verifying stash items checksums..."
-
-if ! find "${BASE_DIR}" -path "${BASE_DIR}/.*.stash/*.sha256" -type f \
-    -execdir sha256sum --check --quiet --status --strict {} +; then
-    echo "Failed checksum varification." >&2
     exit 1
 fi
 

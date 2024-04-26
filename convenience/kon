@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Save or restore Konsole window.
+# Save and restore Konsole window.
 
 set -o nounset -o errexit
 
@@ -129,6 +129,6 @@ if [ -n "${RESTORE}" ]; then
         exit 1
     fi
 
-    konsole --tabs-from-file "${RESTORE}" &
+    konsole --tabs-from-file "${RESTORE}" -e 'bash -c exit' &
 fi
 
