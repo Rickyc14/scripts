@@ -1,14 +1,15 @@
 # Crypt
 
+In symmetric encryption, the same key is used for both encrypting and decrypting data. However, asymmetric encryption, also known as public key encryption, involves a pair of keys — a public and a private key. Data is encrypted with the recipient’s public key, and only the recipient’s corresponding private key can decrypt it.
 
-- **Symmetric** encryption: same key for both encryption and decryption
-- **Asymmetric** encryption: uses a pair of keys (a public key and a private key)
-  - encrypt data with the public key, and only the corresponding private key can decrypt it.
-  - does not involve symmetric keys for the encryption process.
+Symmetric encryption is generally preferred for encrypting large files due to its efficiency and speed. Asymmetric encryption would be impractical for large files because of the significant computational resources and time required.
+
+Symmetric cryptography generally provides a much higher level of security for a given key length. This is why we can use 128-bit symmetric algorithms but need to use 1024-bit or 2048-bit asymmetric algorithms. Additionally, symmetric algorithms execute far faster and provide no less security than asymmetric algorithms when protecting files.
+
+Asymmetric cryptography is necessary when you need to exchange information with someone with whom you have not exchanged keys (and even then, you typically use symmetric encryption and encrypt the key asymmetrically) or when you need to sign something (in which case you encrypt the hash value asymmetrically).
 
 
-_Symmetric encryption is generally preferred for encrypting large files due to its efficiency and speed. Asymmetric encryption would be impractical for large files because of the significant computational resources and time it would require._
-
+<br>
 
 
 **Generate GPG key pair**:
@@ -22,9 +23,11 @@ gpg --full-generate-key
 
 ```bash
 gpg --verbose --output ENCRYPTED_FILE --symmetric --no-symkey-cache FILE_TO_ENCRYPT
+```
 
-# or
+**or**:
 
+```bash
 gpg --verbose --log-time --log-file LOG_FILE --output ENCRYPTED_FILE --symmetric --no-symkey-cache FILE_TO_ENCRYPT
 ```
 
@@ -34,9 +37,11 @@ gpg --verbose --log-time --log-file LOG_FILE --output ENCRYPTED_FILE --symmetric
 
 ```bash
 gpg --verbose --output DECRYPTED_FILE --decrypt --no-symkey-cache ENCRYPTED_FILE
+```
 
-# or
+**or**:
 
+```bash
 gpg --verbose --log-time --log-file LOG_FILE --output DECRYPTED_FILE  --decrypt --no-symkey-cache ENCRYPTED_FILE
 ```
 
