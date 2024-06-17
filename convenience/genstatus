@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#
+# Generate and save status information for every file in directory.
 
 set -o nounset -o errexit
 
@@ -17,7 +19,7 @@ if [ ! -d "${BASE_DIR}" ] || [ -L "${BASE_DIR}" ]; then
     exit 1
 fi
 
-readonly OUTPUT_FILE="${BASE_DIR}/status_report.csv"
+readonly OUTPUT_FILE="${BASE_DIR}/status_report_$(date +'%Y-%m-%d').csv"
 
 if [ -f "${OUTPUT_FILE}" ]; then
     echo "Status report file already exists: ${OUTPUT_FILE}" >&2
@@ -76,10 +78,13 @@ for key in "${metaorder[@]}"; do
     format+="\"${key}\", "
 done
 
+header="${header%', '}"
+format="${format%', '}"
+
 echo "${header}" >> "${OUTPUT_FILE}"
 
-find "${BASE_DIR}" -not -path "${OUTPUT_FILE}" -type f,d \
-    -exec stat --format="${format}" {} \; >> "${OUTPUT_FILE}"
+find "${BASE_DIR}" -not -path "${OUTPUT_FILE}" \
+    -exec stat --format="${format}" '{}' ';' >> "${OUTPUT_FILE}"
 
 chmod 444 "${OUTPUT_FILE}"
 
