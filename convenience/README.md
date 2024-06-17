@@ -4,6 +4,7 @@
 **Summary**:
 
 - Archiving and compressing
+- GNU find
 - Hashing
 - System
 - Networking
@@ -11,6 +12,7 @@
 - Multimedia
 - KDE
 - Functions
+- Git
 - References
 
 
@@ -52,12 +54,6 @@ tar --create \
 The `--directory=DIR` option (`-C DIR`) changes to `DIR` before performing any operations. This option is order‐sensitive, i.e. it affects all options that follow.
 
 
-```bash
-DIR_PATH="/path/to/directory"
-dirname "${DIR_PATH}"     # /path/to
-basename "${DIR_PATH}"    # directory
-```
-
 
 ```bash
 tar --create \
@@ -84,6 +80,175 @@ tar -cvpzf backup.tar.gz --exclude=/backup.tar.gz --one-file-system /
 zip -r FILE.zip FILE
 ```
 
+**List all files in the zip archive without actually extracting them**:
+
+```bash
+files=$(unzip -Z -1 "$archive")
+
+unzip -p "$archive" "$file" | sha256sum | awk '{print $1}'
+
+unzip -p archive.zip | sha256sum
+
+tar -xzvf archive.tar.gz --to-command='sha256sum'
+
+tar -xOzf archive.tar.gz | sha256sum
+tar -xOjf archive.tar.bz2 | sha256sum
+
+tar -xzvf archive.tar.gz --to-command='sh -c "sha256sum > /dev/stdout; echo $TAR_FILENAME"'
+```
+
+
+<br><br>
+
+
+## GNU find
+
+
+**Important: remember to "protect" the braces and semicolon (or plus sign) when executing a command (i.e., `-exec` or `-execdir`) as shown below.**
+
+
+From `find(1)` EXAMPLES section:
+
+```
+   Executing a command for each file
+       •      Run file on every file in or below the current directory.
+
+                  $ find . -type f -exec file '{}' \;
+
+              Notice that the braces are enclosed in single quote marks
+              to protect them from interpretation as shell script
+              punctuation.  The semicolon is similarly protected by the
+              use of a backslash, though single quotes could have been
+              used in that case also.
+
+       In many cases, one might prefer the `-exec ... +` or better the
+       `-execdir ... +` syntax for performance and security reasons.
+```
+
+**Using `exec`**
+
+
+**Find and sort the 10 latest files in the current directory by time of last data modification**:
+
+```bash
+find . -type f -exec stat -c '%Y %n' '{}' \; | sort -nr | cut -d' ' -f2- | awk 'NR==1,NR==10 {print}'
+```
+
+
+**Find files in `/search/path` bigger than 2 gibibytes and sort them from largest to smallest**:
+
+```bash
+find /search/path -type f -size +2G -exec du -h '{}' '+' | sort -rh
+```
+
+**Find and copy files that have been modified in the last 24 hours**:
+
+```bash
+find /search/path -newermt "yesterday" -type f -exec cp --target-directory=DIRECTORY '{}' '+'
+```
+
+
+**Find files by age.**
+
+- **`-amin n`**: Finds files accessed exactly, less than, or more than `n` minutes ago.
+- **`-anewer reference`**: Finds files accessed more recently than the reference file's last modification time.
+- **`-atime n`**: Finds files accessed exactly, less than, or more than `n*24` hours ago, ignoring fractional days.
+- **`-cmin n`**: Finds files with status changes exactly, less than, or more than `n` minutes ago.
+- **`-cnewer reference`**: Finds files with status changes more recent than the reference file's last modification time.
+- **`-ctime n`**: Finds files with status changes exactly, less than, or more than `n*24` hours ago, with rounding rules similar to `-atime`.
+- **`-mmin n`**: Checks if a file's data was modified exactly, less than, or more than `n` minutes ago.
+- **`-mtime n`**: Checks if a file's data was modified exactly, less than, or more than `n*24` hours ago. Refer to `-atime` comments for details on rounding effects.
+- **`-newer reference`**: Time of the last data modification of the current file is more recent than that of the last data modification of the reference file.
+- **`-newerXY reference`**: Succeeds if timestamp `X` of the file being considered is newer than timestamp `Y` of the file reference, where `X` and `Y` represent different time attributes:
+  - `a`: Access time
+  - `B`: Birth time
+  - `c`: Inode status change time
+  - `m`: Modification time
+  - `t`: Direct time interpretation
+  - Note:
+    - Some combinations of `XY` are invalid or unsupported.
+    - Using an unsupported or invalid combination results in a fatal error.
+    - Time specifications follow the `-d` option format of GNU date.
+    - Birth time checks may result in errors if birth times are indeterminable or unsupported.
+
+
+```bash
+# Files that have been modified in the last twenty-four hours.
+find . -mtime 0 -type f
+
+# Files that have been modified in the last two hours.
+find . -mmin -120 -ls
+
+# Use `-ls` to list current file in `ls -dils` format on standard output.
+find . -mtime 0 -type f -ls
+
+# Find files that have been last modified exactly 2 days ago.
+find /search/path -mtime 2
+
+# Find files that have been modified within the last 5 days.
+find /search/path -mtime -5
+
+# Find files that have had their status changed within the last 30 days.
+find . -ctime -30
+
+# Find files that have been modified in the last 24 hours using a more human-readable approach.
+find . -newermt "yesterday" -type f
+
+# Find files that have been modified within the last 2 days.
+find /search/path/ -newermt "2 days ago" -ls
+find /search/path/ -newermt "-48 hours" -ls
+```
+
+
+**Find and delete empty directories in current working directory**:
+
+```bash
+find . -type d -empty -delete
+```
+
+
+
+```bash
+# .NET / C#
+
+find . -type d \( -name "bin" -or -name "obj" -or -name "node_modules" -or -name ".idea" -or -name "x64" \) -exec rm -rf '{}' '+'
+
+find . -type d \( -path "*/client/.angular" -or -path "*/client/dist" \) -exec rm -rf '{}' '+'
+
+find . -type d -empty -delete
+
+find . -name ".vs" -type d
+```
+
+
+**find all files with the same name**
+
+```bash
+
+find -type f -print0 | awk -F/ 'BEGIN { RS="\0" } { n=$NF } k[n]==1 { print p[n]; } k[n] { print $0 } { p[n]=$0; k[n]++ }'
+
+
+
+# Using GNU find:
+
+find /some/path -type f -printf '%f\n' | sort | uniq -c
+
+
+
+# Using POSIX find:
+
+find /some/path -type f | sed 's~^.*/~~' | sort | uniq -c
+
+find "$@" '!' -type d -print0 | xargs -0 basename -za | sort -z | uniq -cz | sort -nzr | tr '\0' '\n'
+```
+
+
+```bash
+# The `-name` test comes before the `-type` test in order to avoid having to call stat(2) on every file.
+find . -name "*.pdf" -type f
+```
+
+
 
 <br><br>
 
@@ -91,9 +256,9 @@ zip -r FILE.zip FILE
 ## Hashing
 
 ```bash
-find -type f -exec md5sum "{}" + > checklist.chk
+find -type f -exec md5sum '{}' + > checklist.chk
 
-find FOO -type f -exec md5sum {} \;  > FOO.md5
+find FOO -type f -exec md5sum '{}' \;  > FOO.md5
 
 echo -n foobar | sha256sum
 
@@ -187,6 +352,41 @@ iw dev wlo1 link
 ## General
 
 
+
+```bash
+fdupes -r -d -N .
+```
+
+
+```bash
+fdupes --noprompt \
+       --delete \
+       --log="${LOG_FILE}" \
+       --recurse \
+       --size \
+       --time \
+       --minsize="$(numfmt --from=iec 100M)" \
+       "${BASE_DIR}"
+```
+
+
+
+
+```bash
+# Print text between specific line numbers
+sed -n '10,44p' filename
+
+
+sed -n '185,235p' file.txt
+
+
+du -sch ./* | sort -h
+```
+
+
+
+
+
 ```bash
 awk 'NR>=98{print}NR==105{exit}' ./templates/layout.html
 
@@ -203,31 +403,36 @@ grep -rl "Error at communicating with the API" ./ | xargs sed -i 's/Error at com
 grep --include=*.{html,po} -rinw . -e "Enter text here"
 
 
-find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
+find . -name 'node_modules' -type d -prune -exec rm -rf '{}' '+'
 
 
-find . -path \"*/migrations/*.py\" -not -name \"__init__.py\" -delete
+find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 
 
-find . -path \"*/migrations/*.pyc\"  -delete
+find . -path "*/migrations/*.pyc"  -delete
 ```
 
 ```bash
 find "${SEARCH_PATH}" -type f \
     \( -size +100M -or -iregex ".*\.\(tar\|tar\.gz\|tgz\|tar\.bz2\|tar\.lz\|tar\.lrz\|tar\.lzo\|tar\.xz\|zip\|7z\)$" \) \
-    -exec sha256sum {} \; | tee SHA256SUMS
+    -exec sha256sum '{}' '+' | tee SHA256SUMS
 ```
 
 
 ```bash
-while read file_path; do if grep -q 'find_string' "${file_path}"; then mv "${file_path}" DEST_DIR/; fi; done < <(find . -name "*.eml" -type f)
+while read -r file_path; do if grep -q 'find_string' "${file_path}"; then mv "${file_path}" DEST_DIR/; fi; done < <(find . -name "*.eml" -type f)
 ```
 
+**Date and time**:
 
 ```bash
-# Display date and time
+date +'%Y-%m-%d'  # 2024-06-17
+```
+
+```bash
 date +"%nDate:%t%d / %B / %Y%t(%A)%nTime:%t%T%t%t(tz: %Z)"
 ```
+
 
 **Check if two directories are the same**:
 
@@ -238,6 +443,12 @@ date +"%nDate:%t%d / %B / %Y%t(%A)%nTime:%t%T%t%t(tz: %Z)"
 diff -r -q /path/to/directory1 /path/to/directory2
 ```
 
+
+```bash
+DIR_PATH="/path/to/directory"
+dirname "${DIR_PATH}"     # /path/to
+basename "${DIR_PATH}"    # directory
+```
 
 
 ```bash
@@ -250,54 +461,10 @@ convert Image-0001.png Image-0002.png Image-0003.png OUTPUT_FILE.pdf
 
 # Or (do not add quotes)
 convert $(ls -v Image-000*.png) OUTPUT_FILE.pdf
+
+convert image.png -gravity North -chop 0x45 cropped_image.png
 ```
 
-```bash
-##
-## find
-##
-
-find . -type f -mtime 0
-
-find . -newermt "yesterday" -type f -exec cp -t ./2024-04-15/ {} +
-
-find /path/to/search/ -type f -name "glob-to-find-files" | xargs cp -t /target/path/
-find /PATH/TO/YOUR/FILES -name NAME.EXT -exec cp -rfp {} /DST_DIR \;
-find . -mtime 1 -exec cp -t ~/test/ {} +
-find . -ctime 15 -exec cp {} ../otherfolder \;
-
-
-# To find all files modified in the last 24 hours (last full day) in a particular specific directory and its sub-directories
-# The "-" before "1" is important, it means anything changed one day or less ago;
-# A "+" before "1" would instead mean anything changed at least one day ago;
-# while having nothing before the "1" would have meant it was changed exacted one day ago, no more, no less.
-find /my/path -mtime -1 -ls
-
-# last 2 hours
-find . -mmin -120 -ls
-
-# human-readable time units (-newerXY)
-find <directory> -newermt "-24 hours" -ls
-find <directory> -newermt "1 day ago" -ls
-find <directory> -newermt "yesterday" -ls
-
-find . -newermt "yesterday"
-```
-
-
-
-**Get the 10 latest files by time of last data modification**:
-
-```bash
-find . -type f -exec stat -c '%Y %n' {} \; | sort -nr | cut -d' ' -f2- | awk 'NR==1,NR==10 {print}'
-```
-
-
-**Find files in "/my/path" bigger than 2 gibibytes and sort them from largest to smallest**:
-
-```bash
-find /my/path -type f -size +2G -exec du -h {} + | sort -rh | awk '{print $1, $2}'
-```
 
 
 <br><br>
@@ -390,9 +557,22 @@ is_regular_dir() {
 <br><br>
 
 
+## Git
+
+```bash
+git show 7b16f41fb7ec3d9b056cc51d11088218a05f61b7:path/to/file
+```
+
+
+<br><br>
+
+
+
+
 ## References
 
 - [System Backup with TAR](https://help.ubuntu.com/community/BackupYourSystem/TAR)
+- [GNU find](https://www.man7.org/linux/man-pages/man1/find.1.html)
 - [Network configuration - Set the hostname](https://wiki.archlinux.org/title/Network_configuration#Set_the_hostname)
 - [hostname(7)](https://www.man7.org/linux/man-pages/man7/hostname.7.html)
 - [Back up and restore information in Firefox profiles](https://support.mozilla.org/en-US/kb/back-and-restore-information-firefox-profiles)
