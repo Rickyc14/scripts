@@ -563,6 +563,11 @@ is_regular_dir() {
 git show 7b16f41fb7ec3d9b056cc51d11088218a05f61b7:path/to/file
 ```
 
+**Show all the changes between a given commit and its parent**:
+
+```bash
+git --no-pager diff 29819bce1e8eaa98122f0cfb78fb88413a8165a7^!
+```
 
 <br><br>
 

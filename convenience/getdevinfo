@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+#
+# Get Device information.
+
+set -o nounset -o errexit
+
+readonly DEVICE="${1-}"
+readonly TREE_MAX_DEPTH=5
+
+if [ -z "${DEVICE}" ]; then
+    echo "Device must be specified, run: sudo ${0} DEVICE" >&2
+    exit 1
+fi
+
+if [ "${#}" -ne 1 ]; then
+    echo "Expected 1 argument, got ${#}" >&2
+    exit 1
+fi
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Program requires root privileges, run: sudo ${0} DEVICE" >&2
+    exit 1
+fi
+
+DEVICE_TYPE="$(lsblk --list --noheadings --output TYPE "${DEVICE}")"
+
+if [ "${DEVICE_TYPE}" != "disk" ]; then
+    echo "Program expects a 'disk' device, got '${DEVICE_TYPE}'" >&2
+    exit 1
+fi
+
+declare -a device_partitions=()
+
+while read -r dev_path dev_type; do
+    if [ "${dev_type}" = "part" ]; then
+        device_partitions+=( "${dev_path}" )
+    fi
+done < <(lsblk --list --noheadings --output PATH,TYPE "${DEVICE}")
+
+
+# NOTE: 'findmnt' expects a partition (/dev/sdb1 OR /dev/sdb if no partition table)
+if ! MOUNT_TARGET="$(findmnt --noheadings --output TARGET --source "${DEVICE}")"; then
+   echo "Unable to determine mount target for '${DEVICE}' device." >&2
+   exit 1
+fi
+
+readonly MOUNT_TARGET
+
+if [ ! -d "${MOUNT_TARGET}" ]; then
+    echo "Unable to read mount target for '${DEVICE}' device." >&2
+    exit 1
+fi
+
+echo "MOUNT TARGET: ${MOUNT_TARGET}"
+
+if ! LABEL="$(blkid --match-tag LABEL --output value "${DEVICE}")"; then
+    echo "Unable to determine label for '${DEVICE}' device." >&2
+    exit 1
+fi
+
+readonly LABEL
+
+if [ "$(echo "${LABEL}" | wc -l)" -ne 1 ]; then
+    echo "Unable to determine exact label for '${DEVICE}' device." >&2
+    exit 1
+fi
+
+echo "LABEL: ${LABEL}"
+
+if ! USER_HOME_DIR="$(sudo -u "${SUDO_USER}" bash -c 'echo "${HOME}"')"; then
+    echo "Unable to determine user's HOME path." >&2
+    exit 1
+fi
+
+if [ -z "${USER_HOME_DIR}" ]; then
+    echo "User HOME environment variable is not set." >&2
+    exit 1
+fi
+
+TODAY="$(date +'%Y-%m-%d')"
+
+readonly OUTPUT_DIR="${USER_HOME_DIR}/${LABEL}/${TODAY}"
+
+if [ -e "${OUTPUT_DIR}" ]; then
+    echo "Output location '${OUTPUT_DIR}' is already in use." >&2
+    exit 1
+fi
+
+echo "OUTPUT DIR: ${OUTPUT_DIR}"
+
+mkdir -p "${OUTPUT_DIR}"
+
+date --iso-8601=seconds | tee "${OUTPUT_DIR}/last_updated.txt"
+
+echo -e "\nGetting device information..."
+
+# NOTE: 'smartctl' expects a device like /dev/sdb, and not a partition
+smartctl -a "${DEVICE}" | tee "${OUTPUT_DIR}/smartctl-a.txt"
+smartctl -x "${DEVICE}" | tee "${OUTPUT_DIR}/smartctl-x.txt"
+
+# NOTE: 'fdisk' expect a DISK device like /dev/sdb, and not a partition
+fdisk --list "${DEVICE}" | tee "${OUTPUT_DIR}/fdisk_list.log"
+fdisk --list-details "${DEVICE}" | tee "${OUTPUT_DIR}/fdisk_list-details.log"
+
+# NOTE: 'blkid' expects a partition! (/dev/sdb1)
+blkid "${DEVICE}" | tee "${OUTPUT_DIR}/blkid.log"
+
+#
+# NOTE: 'lsblk' goes both ways (/dev/sdb or /dev/sdb1)... just depends on what you need
+#
+lsblk --output-all "${DEVICE}" | tee "${OUTPUT_DIR}/lsblk.txt"
+
+lsblk --json --output-all "${DEVICE}" | tee "${OUTPUT_DIR}/lsblk.json"
+
+# NOTE: 'df' expects a partition (/dev/sdb1 OR /dev/sdb if no partition table)
+df --human-readable --output "${DEVICE}" | tee "${OUTPUT_DIR}/report_fs_space_usage.txt"
+
+readonly TREE_OUTPUT_DIR="${OUTPUT_DIR}/tree"
+
+mkdir -p "${TREE_OUTPUT_DIR}"
+
+echo -e "\nBuilding device tree..."
+
+for depth in $(seq 1 ${TREE_MAX_DEPTH}); do
+    echo "${depth} of ${TREE_MAX_DEPTH}"
+
+    tree -C -a -d -L "${depth}" \
+         -o "${TREE_OUTPUT_DIR}/tree_dirs_L${depth}_colorized.txt" \
+         "${MOUNT_TARGET}"
+
+    tree -C -a --du -h --dirsfirst -L "${depth}" \
+         -o "${TREE_OUTPUT_DIR}/tree_all_files_L${depth}_colorized.txt" \
+         "${MOUNT_TARGET}"
+
+    tree -n -a -d -L "${depth}" \
+         -o "${TREE_OUTPUT_DIR}/tree_dirs_L${depth}.txt" \
+         "${MOUNT_TARGET}"
+
+    tree -n -J -a -d -L "${depth}" \
+         -o "${TREE_OUTPUT_DIR}/tree_dirs_L${depth}.json" \
+         "${MOUNT_TARGET}"
+
+    tree -n -a --du -h --dirsfirst -L "${depth}" \
+         -o "${TREE_OUTPUT_DIR}/tree_all_files_L${depth}.txt" \
+         "${MOUNT_TARGET}"
+
+    tree -n -J -a --du -h --dirsfirst -L "${depth}" \
+         -o "${TREE_OUTPUT_DIR}/tree_all_files_L${depth}.json" \
+         "${MOUNT_TARGET}"
+done
+
+echo "Finding files > 1G..."
+
+find "${MOUNT_TARGET}" -size +1G -type f | tee "${OUTPUT_DIR}/all_files_gt_1G.txt"
+
+echo "Sorting files > 1G..."
+
+while read -r file_line; do
+   du -h "${file_line}"
+done < "${OUTPUT_DIR}/all_files_gt_1G.txt" |
+   sort -rh | tee "${OUTPUT_DIR}/all_files_gt_1G_hsizes_sorted.txt"
+
+find "${OUTPUT_DIR}" -type f -execdir chmod 444 '{}' '+'
+
+chown -R "${SUDO_USER}:${SUDO_USER}" "$(dirname "${OUTPUT_DIR}")"
+
+echo -e "\nDone!"
+
